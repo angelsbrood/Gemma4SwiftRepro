@@ -1,0 +1,15 @@
+Gemma4SwiftRepro
+Gemma model directory: /Users/nellymoon/.cache/huggingface/hub/models--mlx-community--gemma-4-26b-a4b-it-8bit/snapshots/1382fb7268fa62c07b83ffa174ff6fa455fb0686
+Qwen model directory:  /Users/nellymoon/.cache/huggingface/hub/models--mlx-community--Qwen3.6-35B-A3B-8bit/snapshots/e06a74e6236a60c8367e1a3214e83d8b61b637b0
+Experiment G: Gemma 4 26B-A4B 8-bit via LMResponseParserMLX (single tool call)
+Model: 1382fb7268fa62c07b83ffa174ff6fa455fb0686
+model_type from config.json: gemma4
+Container loaded.
+[1] responseCreated
+[2] responseInProgress
+[3] outputItemAdded(functionCall(id=fc_x2h1dxe5dev422zqg7jwycj3 callId=call_8ypwxmaj68n1xyfsbkfzt2th name=insert_section arguments="" status=inProgress))
+[4] functionCallArgumentsDelta(itemId=fc_x2h1dxe5dev422zqg7jwycj3 delta="{\"content\":\"Hello. <!-- @anchor turns=\\"0000\\" -->\",\"heading\":\"Test\"}")
+[5] functionCallArgumentsDone(itemId=fc_x2h1dxe5dev422zqg7jwycj3 arguments="{\"content\":\"Hello. <!-- @anchor turns=\\"0000\\" -->\",\"heading\":\"Test\"}")
+[6] outputItemDone(functionCall(id=fc_x2h1dxe5dev422zqg7jwycj3 callId=call_8ypwxmaj68n1xyfsbkfzt2th name=insert_section arguments="{\"content\":\"Hello. <!-- @anchor turns=\\"0000\\" -->\",\"heading\":\"Test\"}" status=completed))
+[7] responseCompleted(status=Optional(LMResponseParser.ResponseStatus.completed), usage=Optional(LMResponseParser.ResponseUsage(inputTokens: 1076, outputTokens: 32, totalTokens: 1108, inputTokensDetails: LMResponseParser.ResponseUsage.InputTokensDetails(cachedTokens: 0), outputTokensDetails: LMResponseParser.ResponseUsage.OutputTokensDetails(reasoningTokens: 0))))
+--- DONE --- (7 events)

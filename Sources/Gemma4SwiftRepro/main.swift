@@ -13,11 +13,25 @@ let modelDirectory: URL = {
     return defaultModelDir
 }()
 
+// Qwen 3.6 35B-A3B 8-bit dir for ExperimentF — set via QWEN_MODEL_DIR env var.
+let qwenModelDirectory: URL = {
+    if let envPath = ProcessInfo.processInfo.environment["QWEN_MODEL_DIR"], !envPath.isEmpty {
+        return URL(filePath: envPath)
+    }
+    return URL(filePath: "/path/to/Qwen3.6-35B-A3B-8bit/snapshots/<hash>")
+}()
+
 print("Gemma4SwiftRepro")
-print("Model directory: \(modelDirectory.path)")
+print("Gemma model directory: \(modelDirectory.path)")
+print("Qwen model directory:  \(qwenModelDirectory.path)")
 
 // try await ExperimentA.run(modelDirectory: modelDirectory)  // ✓ passed
 // try await ExperimentB.run(modelDirectory: modelDirectory)  // ✓ passed
 // try await ExperimentC.run(modelDirectory: modelDirectory)  // ✓ passed
 // try await ExperimentD.run(modelDirectory: modelDirectory)  // ✗ broadcast crash (64) vs (1139)
-try await ExperimentE.run(modelDirectory: modelDirectory)
+// try await ExperimentE.run(modelDirectory: modelDirectory)  // ✗ broadcast crash (64) vs (80)
+
+// parser-test branch — swift-lm-response-parser experiments. Run one at a time.
+// try await ExperimentF.run(modelDirectory: qwenModelDirectory)
+// try await ExperimentG.run(modelDirectory: modelDirectory)
+try await ExperimentH.run(modelDirectory: modelDirectory)
