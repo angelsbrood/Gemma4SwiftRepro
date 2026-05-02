@@ -214,3 +214,93 @@ becomes maintenance-free downstream. Without Q2 fixes: ~250 LOC retires
    `ResponseChatSession.init` defaults `processing` for VLM use; text models
    via `LLMModelFactory` ignore it but the default is awkward for non-VLM
    consumers.
+
+---
+
+## Re-test against latest commit (2026-05-02)
+
+Tested against `swift-lm-response-parser` commit
+`7ef3a442dca1af3ec0addefbf4beff95f8e5c749` ("Add Qwen 3.6 XML routing and
+prompt-boundary reasoning state handling", authored 2026-05-02), following
+@DePasqualeOrg's fix for the Qwen 3.6 issues identified above.
+
+Resolved versions: `swift-lm-response-parser` `7ef3a44…`, `mlx-swift-lm`
+`3.31.3` (revision `1c05248bb0899e2a7a4962b84d319cf12f4e12aa`, stable). SPM
+dep-graph: **resolved cleanly** — Issue 1 of the original report retires.
+The parser library's prior commit `a9caec7` ("Pin mlx-swift-lm to version
+number") moved its internal pin from `branch:"main"` to `from: "3.31.3"`,
+which lets root consumers also pin stably.
+
+### Question 2 (re-test): Reasoning-channel parsing for Qwen 3.6 35B-A3B
+
+**Yes.** Re-running the same Experiment F prompt against the updated library
+(`results/F-qwen-rerun.txt`):
+
+- `reasoningDelta` / `reasoningDone` events: **242** (was 0 in original test)
+- `</think>` in any `outputTextDelta`: **none** (was 1)
+- Final terminal: `responseCompleted(status=.cancelled)` — `usage.outputTokensDetails.reasoningTokens: 242`
+
+The very first content event is now `outputItemAdded(reasoning(id=rs_…))`
+rather than `outputItemAdded(message(id=msg_…))`, confirming the parser
+now enters reasoning mode at the prompt boundary. All 242 chain-of-thought
+deltas land in a `reasoning` item; once the model emits the closing
+`</think>` it's consumed cleanly and a fresh `message` item carries the
+final-answer phase (events 249–267).
+
+Both Qwen 3.6 issues from the original SUMMARY appear resolved:
+
+- **Issue 3 (model_type dispatch)**: `qwen3_5_moe` now routes to a
+  reasoning-aware parser. The fix commit message frames this as "Qwen 3.6
+  XML routing"; the result is that `<think>...</think>` reasoning content
+  is recognized as such regardless of which dispatch branch handles it.
+- **Issue 2 (chat-template `<think>` injection)**: addressed via three new
+  files — `Core/DelimitedReasoningBoundary.swift`,
+  `Core/ImplicitReasoningPreamble.swift`, `Core/PromptBoundaryPriorText.swift`
+  (plus the bridge-side `PromptBoundaryPriorText.swift` and a 14-line wiring
+  change in `ResponseChatSession+PassDriver.swift`). Effect: the parser is
+  seeded with implied prior reasoning state when the rendered prompt ends
+  inside a reasoning marker, so the absence of an opening `<think>` in the
+  model's emission no longer prevents reasoning-mode entry.
+
+### Threshold migration sketch (revisited)
+
+Both Q2 fixes landed cleanly, so the conditional language in the original
+sketch drops:
+
+- The full ~400 LOC retires cleanly (prior estimate split was ~250 LOC
+  unconditional + ~150 LOC contingent on Qwen `<think>` injection being
+  addressed). Specifically, `Gemma4ChannelParser` and `ThinkSpanExtractor`
+  now both retire under the parser library's coverage.
+- `Gemma4ToolCallEncoder`, `Qwen3ToolCallEncoder`, and `appendGemma4History`
+  remain in Threshold — Q4 (no encoder side) and the `MLXLMCommon.Chat.Message`
+  structural gap are unchanged by this fix.
+
+### API churn note (heads up for consumers)
+
+Bumping past `0.1.0`'s tag commit requires a small consumer-side update.
+Two source-breaking changes since the tag:
+
+- `ResponseStreamingEvent.reasoningTextDelta/Done` cases renamed to
+  `reasoningDelta/Done`. Same payload shape; cosmetic rename to align with
+  Open Responses spec naming.
+- A new top-level case `responseIncomplete(ResponseIncompleteEvent)` was
+  added (see "Outstanding" below).
+
+Our `ParserSupport.swift:55–58` switch on `ResponseStreamingEvent` was
+updated to use the new names and to handle the new case explicitly. With
+that one-file change the existing experiments (F here, plus G/H against the
+original library) compile against the bumped revision.
+
+### Outstanding from original SUMMARY
+
+- **Issue 4 (`.cancelled` vs `.incomplete` semantics on maxTokens)**: still
+  open in this run. The library now defines a `responseIncomplete` event
+  case with a documentation comment that explicitly distinguishes vLLM/SGLang
+  collapsed semantics from Open Responses' separate discriminator, but our
+  maxTokens-hit run still terminates with
+  `responseCompleted(status=.cancelled)`. The discriminator-routing for
+  maxTokens-induced termination doesn't appear to flip to
+  `responseIncomplete` yet. Not part of what this commit was claimed to
+  fix; noting status only.
+- **Issue 5 (default `processing.resize`)**: not exercised; status
+  unchanged.

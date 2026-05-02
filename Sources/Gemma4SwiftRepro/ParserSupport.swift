@@ -36,6 +36,8 @@ func describeEvent(_ event: ResponseStreamingEvent) -> String {
         return "responseInProgress"
     case let .responseCompleted(e):
         return "responseCompleted(status=\(String(describing: e.response.status)), usage=\(String(describing: e.response.usage)))"
+    case let .responseIncomplete(e):
+        return "responseIncomplete(status=\(String(describing: e.response.status)), usage=\(String(describing: e.response.usage)))"
     case let .outputItemAdded(e):
         return "outputItemAdded(\(itemSummary(e.item)))"
     case let .outputItemDone(e):
@@ -52,10 +54,10 @@ func describeEvent(_ event: ResponseStreamingEvent) -> String {
         return "functionCallArgumentsDelta(itemId=\(e.itemId) delta=\(escape(e.delta)))"
     case let .functionCallArgumentsDone(e):
         return "functionCallArgumentsDone(itemId=\(e.itemId) arguments=\(escape(e.arguments)))"
-    case let .reasoningTextDelta(e):
-        return "reasoningTextDelta(itemId=\(e.itemId) delta=\(escape(e.delta)))"
-    case let .reasoningTextDone(e):
-        return "reasoningTextDone(itemId=\(e.itemId) text=\(escape(e.text)))"
+    case let .reasoningDelta(e):
+        return "reasoningDelta(itemId=\(e.itemId) delta=\(escape(e.delta)))"
+    case let .reasoningDone(e):
+        return "reasoningDone(itemId=\(e.itemId) text=\(escape(e.text)))"
     @unknown default:
         return "<unknown event \(event)>"
     }

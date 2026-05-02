@@ -32,6 +32,6 @@ print("Qwen model directory:  \(qwenModelDirectory.path)")
 // try await ExperimentE.run(modelDirectory: modelDirectory)  // ✗ broadcast crash (64) vs (80)
 
 // parser-test branch — swift-lm-response-parser experiments. Run one at a time.
-// try await ExperimentF.run(modelDirectory: qwenModelDirectory)
+try await ExperimentF.run(modelDirectory: qwenModelDirectory)
 // try await ExperimentG.run(modelDirectory: modelDirectory)
-try await ExperimentH.run(modelDirectory: modelDirectory)
+// try await ExperimentH.run(modelDirectory: modelDirectory)
